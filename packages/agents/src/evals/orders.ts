@@ -14,48 +14,43 @@ type Output = AgentResponse<string>;
 
 const cases = [
   {
-    id: "pkwt-max-duration",
-    input: "Berapa lama maksimal karyawan bisa dikontrak (PKWT)?",
+    id: "order-delivered",
+    input: "Tolong cek pesanan MJE-1001, email saya sari@example.com. Statusnya apa dan total bayarnya berapa?",
     expected: {
-      answer: "A PKWT can last at most 5 years in total, including extensions (PP 35/2021).",
-      pattern: /5\s*(tahun|years?)/i,
+      answer: "Order MJE-1001 (Rice Cooker Digital 1.8L) has been delivered (Telah Diterima), 3 days ago. The total paid was Rp549.000 with GoPay.",
+      pattern: /549[.,]?000/,
     },
   },
   {
-    id: "pkwt-compensation",
-    input:
-      "My 6-month contract (PKWT) is ending. My monthly wage is Rp7.000.000. How much compensation should I get?",
+    id: "order-tracking",
+    input: "Paket pesanan MJE-1002 (email andi@example.com) sekarang di mana? Kapan sampai?",
     expected: {
-      answer: "Uang kompensasi is prorated: 6/12 x 7.000.000 = Rp3.500.000 (PP 35/2021).",
-      pattern: /3[.,]?500[.,]?000|3[.,]5\s*juta/i,
+      answer: "Order MJE-1002 (Smart TV LED 43 inch) is being shipped by J&T Cargo with tracking number JNT200200200. It is on the way to Bandung, with delivery expected in about 1-2 days.",
+      pattern: /200200200/,
     },
   },
   {
-    id: "pkwt-no-probation",
-    input: "Apakah karyawan kontrak (PKWT) boleh diberi masa percobaan 3 bulan?",
+    id: "return-expired",
+    input: "Saya mau retur blender dari pesanan MJE-1003, email dewi@example.com, karena berubah pikiran.",
     expected: {
-      answer:
-        "No. A PKWT must not have a probation period; if it does, the probation is void. Probation is only for permanent employees (PKWTT), for at most 3 months.",
-      pattern: /3\s*(bulan|months?)/i,
+      answer: "The return is not possible: the order was delivered 10 days ago and the return period is 7 days. Defects are still covered by the 1-year warranty.",
+      pattern: /\b7\s*(hari|days?)/i,
     },
   },
   {
-    id: "resignation-notice",
-    input: "Kalau saya mau resign, harus kasih tahu berapa hari sebelumnya? Dan saya dapat apa saja? Saya sudah kerja 4 tahun.",
+    id: "order-awaiting-payment",
+    input: "Pesanan MJE-1004 (rudi@example.com) belum saya bayar. Berapa yang harus dibayar dan sampai kapan?",
     expected: {
-      answer:
-        "Submit a written resignation at least 30 days before the last working day. Entitlements: uang penggantian hak (unused annual leave etc.) and, at PT Maju Jaya Sakti, uang pisah of 1 month's base salary because service is 3 years or more. No pesangon or UPMK for resignation.",
-      pattern: /30\s*(hari|days?)/i,
+      answer: "Order MJE-1004 (Air Fryer 4L) is awaiting payment of Rp899.000 by BCA virtual account. The payment deadline is in about 5 hours; after that the order is cancelled automatically.",
+      pattern: /899[.,]?000/,
     },
   },
   {
-    id: "severance-efficiency",
-    input:
-      "I'm being laid off for company efficiency to prevent losses. I have worked 5 years and 2 months and my wage (base + fixed allowances) is Rp10.000.000. How much severance do I get?",
+    id: "order-cancel",
+    input: "Saya mau batalkan pesanan MJE-1005, email maya@example.com. Masih bisa? Berapa total pesanannya?",
     expected: {
-      answer:
-        "Efficiency to prevent losses: 1 x uang pesangon + UPMK + UPH. 5 to <6 years gives pesangon of 6 months = Rp60.000.000. UPMK for 3 to <6 years is 2 months = Rp20.000.000. Total Rp80.000.000, plus uang penggantian hak.",
-      pattern: /80[.,]?000[.,]?000|80\s*juta/i,
+      answer: "Yes. Order MJE-1005 (Setrika Uap 2000W, Rp329.000, COD) is still being packed (Sedang Dikemas), so it can be cancelled for free in the app under Pesanan Saya -> Batalkan. The assistant cannot cancel it itself.",
+      pattern: /329[.,]?000/,
     },
   },
 ] satisfies { id: string; input: string; expected: Expected }[];
@@ -65,7 +60,7 @@ const judge = getModel(process.env.EVAL_JUDGE_MODEL_ID);
 const correctnessParams = ["input", "actualOutput", "expectedOutput"] as const;
 
 await runEvalCli({
-  name: "hr-contracts-termination",
+  name: "support-orders",
   cases,
   concurrency: 5,
   exitCode: true,
@@ -90,7 +85,7 @@ await runEvalCli({
       evaluationParams: correctnessParams,
       expected: ({ case: testCase }) => testCase.expected?.answer ?? "",
       evaluationSteps: [
-        "List the key facts, numbers and conditions in the expected output for the user's HR question.",
+        "List the key facts, numbers and conditions in the expected output for the customer's question.",
         "Check each one is present and correct in the actual output. Different wording or number formatting (Rp1.000.000, 1,000,000, 1 juta) is fine.",
         "Penalise numbers or rules in the actual output that contradict the expected output.",
         "Do not penalise extra helpful details that do not contradict the expected output.",

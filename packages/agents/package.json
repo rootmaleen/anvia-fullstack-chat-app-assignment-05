@@ -21,10 +21,10 @@
   },
   "scripts": {
     "evals": "s=0; for f in src/evals/*.ts; do node --env-file=../../.env --import tsx $f || s=1; done; exit $s",
-    "evals:1": "node --env-file=../../.env --import tsx src/evals/leave.ts",
-    "evals:2": "node --env-file=../../.env --import tsx src/evals/overtime-thr.ts",
-    "evals:3": "node --env-file=../../.env --import tsx src/evals/bpjs-tax.ts",
-    "evals:4": "node --env-file=../../.env --import tsx src/evals/contracts-termination.ts",
+    "evals:1": "node --env-file=../../.env --import tsx src/evals/returns-refunds.ts",
+    "evals:2": "node --env-file=../../.env --import tsx src/evals/shipping-payment.ts",
+    "evals:3": "node --env-file=../../.env --import tsx src/evals/warranty-vouchers.ts",
+    "evals:4": "node --env-file=../../.env --import tsx src/evals/orders.ts",
     "lens:test": "node --env-file=../../.env --import tsx scripts/lens-live-test.ts"
   }
 }

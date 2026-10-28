@@ -1,9 +1,4 @@
 import type { Document } from "@anvia/core";
-import { companyPoliciesDocument, companyProfileDocument } from "./company";
-import { indonesiaRulesDocuments } from "./indonesia-rules";
+import { storeDocuments } from "./store";
 
-export const staticContext: Document[] = [
-  companyProfileDocument,
-  companyPoliciesDocument,
-  ...indonesiaRulesDocuments,
-];
+export const staticContext: Document[] = storeDocuments;

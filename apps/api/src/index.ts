@@ -48,7 +48,13 @@ app.get("/api/sessions", async (c) => {
 });
 
 app.get("/api/chat/:sessionId", async (c) => {
-  const messages = await memoryStore.load({ scope: { sessionId: c.req.param("sessionId"), userId: USER_ID } });
+  // The inspector returns each stored message with its createdAt. Its ref is the session row id.
+  const session = await db.orm.public.AgentMemorySession.where({ sessionId: c.req.param("sessionId"), userId: USER_ID }).first();
+  const conversation = session && (await memoryStore.inspector?.getConversation({ ref: session.id }));
+  const messages = (conversation?.messages ?? []).map(({ message, createdAt }) => ({
+    ...message,
+    metadata: { ...message.metadata, createdAt },
+  }));
   return c.json(messages);
 });
 

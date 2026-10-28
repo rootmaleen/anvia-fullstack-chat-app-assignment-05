@@ -14,52 +14,43 @@ type Output = AgentResponse<string>;
 
 const cases = [
   {
-    id: "overtime-workday",
-    input:
-      "Gaji pokok plus tunjangan tetap saya Rp8.650.000 per bulan. Kemarin saya lembur 3 jam di hari kerja. Berapa upah lembur saya?",
+    id: "return-window",
+    input: "Berapa lama batas waktu retur barang? Kalau saya cuma berubah pikiran, boleh?",
     expected: {
-      answer:
-        "Hourly wage = 8.650.000 / 173 = Rp50.000. 1st hour at 1.5x = Rp75.000, next 2 hours at 2x = Rp200.000. Total overtime pay Rp275.000.",
-      pattern: /275[.,]?000/,
+      answer: "Returns are accepted within 7 calendar days after the order is delivered. A change of mind is only accepted if the product is unopened (seal intact), unused and complete in its original box, and the customer pays the return shipping.",
+      pattern: /\b7\s*(hari|days?)/i,
     },
   },
   {
-    id: "overtime-weekly-limit",
-    input: "Maksimal boleh lembur berapa jam per hari dan per minggu?",
+    id: "damaged-on-arrival",
+    input: "Barang saya datang dalam kondisi rusak. Apa yang harus saya lakukan dan berapa lama batas melapornya?",
     expected: {
-      answer:
-        "Maximum 4 hours a day and 18 hours a week (PP 35/2021). Work on rest days and public holidays is not counted in this limit.",
-      pattern: /18\s*(jam|hours?)/i,
+      answer: "Report it in the app within 2 x 24 hours (48 hours) after receiving it, with a continuous unboxing video and photos. Return shipping is free, and the customer gets a replacement or a full refund including the shipping fee.",
+      pattern: /2\s*[x×]\s*24|48\s*(jam|hours?)/i,
     },
   },
   {
-    id: "overtime-rest-day",
-    input:
-      "I'm office staff on a 5-day week. My monthly wage (base + fixed allowances) is Rp6.920.000 and I worked 9 hours on Saturday. How much overtime pay do I get?",
+    id: "refund-ewallet",
+    input: "Kalau retur saya disetujui, refund ke GoPay berapa lama?",
     expected: {
-      answer:
-        "Hourly wage = 6.920.000 / 173 = Rp40.000. On a rest day in a 5-day week, hours 1-8 are paid 2x (8 x 2 x 40.000 = Rp640.000) and hour 9 is paid 3x (Rp120.000). Total Rp760.000.",
-      pattern: /760[.,]?000/,
+      answer: "E-wallet refunds take 1-3 working days after the return is approved (after the warehouse inspection, which takes up to 2 working days).",
+      pattern: /1\s*[-–]\s*3|1\s*(sampai|hingga|to)\s*3/i,
     },
   },
   {
-    id: "thr-prorated",
-    input:
-      "Saya baru kerja 8 bulan. Gaji pokok Rp6.000.000 dan tunjangan tetap Rp1.000.000. Berapa THR yang saya dapat?",
+    id: "refund-cod",
+    input: "Saya bayar COD lalu retur barangnya. Refund-nya dikirim lewat apa dan berapa lama?",
     expected: {
-      answer:
-        "Service under 12 months, so THR is prorated: 8/12 x (6.000.000 + 1.000.000) = Rp4.666.667 (Permenaker 6/2016).",
-      pattern: /4[.,]?666[.,]?66[67]/,
+      answer: "For COD orders the refund is sent by bank transfer to the customer's bank account, 3-5 working days after the return is approved.",
+      pattern: /3\s*[-–]\s*5|3\s*(sampai|hingga|to)\s*5/i,
     },
   },
   {
-    id: "thr-full-excludes-meal",
-    input:
-      "I've worked 3 years. Base salary Rp9.000.000, transport allowance Rp1.000.000 and meal allowance about Rp500.000 depending on attendance. How much THR do I get and when?",
+    id: "refund-credit-card",
+    input: "I paid by credit card. How long does a refund take?",
     expected: {
-      answer:
-        "Service is 12 months or more, so THR is 1 month of wage = base + fixed allowances = 9.000.000 + 1.000.000 = Rp10.000.000. The meal allowance is paid per attendance, so it is not a fixed allowance and is excluded. PT Maju Jaya Sakti pays THR at the latest 14 days before the holiday.",
-      pattern: /10[.,]?000[.,]?000|10\s*juta/i,
+      answer: "Credit card refunds take 7-14 working days after the return is approved, depending on the bank.",
+      pattern: /7\s*[-–]\s*14|7\s*(sampai|hingga|to)\s*14/i,
     },
   },
 ] satisfies { id: string; input: string; expected: Expected }[];
@@ -69,7 +60,7 @@ const judge = getModel(process.env.EVAL_JUDGE_MODEL_ID);
 const correctnessParams = ["input", "actualOutput", "expectedOutput"] as const;
 
 await runEvalCli({
-  name: "hr-overtime-thr",
+  name: "support-returns-refunds",
   cases,
   concurrency: 5,
   exitCode: true,
@@ -94,7 +85,7 @@ await runEvalCli({
       evaluationParams: correctnessParams,
       expected: ({ case: testCase }) => testCase.expected?.answer ?? "",
       evaluationSteps: [
-        "List the key facts, numbers and conditions in the expected output for the user's HR question.",
+        "List the key facts, numbers and conditions in the expected output for the customer's question.",
         "Check each one is present and correct in the actual output. Different wording or number formatting (Rp1.000.000, 1,000,000, 1 juta) is fine.",
         "Penalise numbers or rules in the actual output that contradict the expected output.",
         "Do not penalise extra helpful details that do not contradict the expected output.",

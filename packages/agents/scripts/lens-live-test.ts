@@ -1,11 +1,11 @@
-// Live test: runs the HR agent once through runAgent() and sends the trace to Anvia Lens.
+// Live test: runs the support agent once through runAgent() and sends the trace to Anvia Lens.
 import { lens, runAgent } from "../src";
 
 if (!lens.enabled) throw new Error("Lens is disabled. Set ANVIA_LENS_BASE_URL, ANVIA_LENS_PUBLIC_KEY and ANVIA_LENS_SECRET_KEY.");
 
 try {
   const stream = runAgent({
-    messages: [{ role: "user", content: "Berapa hari cuti tahunan yang saya dapat setelah 1 tahun bekerja?" }],
+    messages: [{ role: "user", content: "Berapa lama batas waktu retur barang?" }],
   });
 
   for await (const event of stream) {

@@ -3,6 +3,7 @@ import { staticContext } from "./context/document";
 import { BASE_INSTRUCTIONS } from "./instructions";
 import { lensObserver } from "./lens";
 import { getModel } from "./model";
+import { createReturnRequestTool, lookupOrderTool, trackShipmentTool } from "./tools/orders";
 import { readWebpageTool, searchWebTool } from "./tools/web-search";
 
 export type RunAgentOptions = AgentRunSettings & {
@@ -18,11 +19,11 @@ export type RunAgentOptions = AgentRunSettings & {
 
 export function createAgent(modelId?: string, memoryStore?: MemoryStore) {
   return new Agent({
-    id: "anvia",
+    id: "support",
     model: getModel(modelId),
     instructions: BASE_INSTRUCTIONS,
     context: staticContext,
-    tools: [searchWebTool, readWebpageTool],
+    tools: [lookupOrderTool, trackShipmentTool, createReturnRequestTool, searchWebTool, readWebpageTool],
     maxTurns: 25,
     // "message" saves the user's message right away, so a new chat is listed before the answer finishes.
     memory: memoryStore ? { store: memoryStore, savePolicy: "message" } : undefined,

@@ -31,7 +31,7 @@ export function Sidebar({ sessions }: { sessions: SessionSummary[] }) {
         </div>
         <div className="text-sm">
           <p className="font-medium">default-user</p>
-          <p className="text-xs text-gray-400">PT Maju Jaya Sakti</p>
+          <p className="text-xs text-gray-400">Toko Maju Elektronik</p>
         </div>
       </div>
     </aside>

@@ -14,46 +14,43 @@ type Output = AgentResponse<string>;
 
 const cases = [
   {
-    id: "leave-annual-entitlement",
-    input: "Berapa hari cuti tahunan yang saya dapat setelah 1 tahun bekerja?",
+    id: "warranty-small",
+    input: "Garansi blender berapa lama?",
     expected: {
-      answer: "At least 12 working days of paid annual leave after 12 months of continuous work (UU 13/2003 Pasal 79).",
-      pattern: /\b12\b/,
+      answer: "Small appliances such as a blender have a 1-year warranty, starting on the delivery date.",
+      pattern: /\b1\s*(tahun|years?)/i,
     },
   },
   {
-    id: "leave-carry-over",
-    input: "Can I carry over my unused annual leave to next year?",
+    id: "warranty-large",
+    input: "Kalau beli kulkas, garansinya berapa lama?",
     expected: {
-      answer:
-        "Yes. Under the PT Maju Jaya Sakti policy, up to 5 unused annual leave days can be carried over to the next year, and they must be used by 31 March.",
-      pattern: /\b5\b/,
+      answer: "Large appliances (AC, kulkas, mesin cuci) and TVs have a 2-year warranty, starting on the delivery date.",
+      pattern: /\b2\s*(tahun|years?)/i,
     },
   },
   {
-    id: "leave-own-marriage",
-    input: "Saya mau menikah bulan depan, dapat cuti berapa hari?",
+    id: "warranty-claim",
+    input: "Bagaimana cara klaim garansi dan berapa lama perbaikannya?",
     expected: {
-      answer: "3 days of paid leave for the employee's own marriage (UU 13/2003 Pasal 93 ayat 4).",
-      pattern: /\b3\s*(hari|days?)/i,
+      answer: "Contact customer service or use the app with the order number, the product serial number and a photo or video of the problem. Repair takes 7-14 working days. If it can't be repaired, it is replaced with the same or an equivalent product.",
+      pattern: /7\s*[-–]\s*14|7\s*(sampai|hingga|to)\s*14/i,
     },
   },
   {
-    id: "leave-maternity",
-    input: "Berapa lama cuti melahirkan dan apakah tetap digaji penuh?",
+    id: "welcome-voucher",
+    input: "Saya pelanggan baru. Voucher-nya potongan berapa dan minimal belanja berapa?",
     expected: {
-      answer:
-        "Under UU 4/2024 (KIA), at least 3 months, extendable by up to 3 more months for medical reasons with a doctor's letter. Full wage for the first 4 months, and 75% of wage for the 5th and 6th month.",
-      pattern: /75\s*%/,
+      answer: "New customers get a Rp50.000 welcome voucher with a minimum purchase of Rp500.000, valid for 30 days after registering, one use only.",
+      pattern: /50[.,]?000/,
     },
   },
   {
-    id: "leave-long-service",
-    input: "I have worked here for 6 years. Do I get any long-service leave?",
+    id: "installment",
+    input: "Cicilan 0% minimal belanja berapa dan tenornya apa saja?",
     expected: {
-      answer:
-        "Yes. PT Maju Jaya Sakti gives 1 extra month of leave after every 6 years of service. The law makes long-service leave optional, so this comes from the company regulation.",
-      pattern: /\b(1|one|satu)\s*(extra\s*)?(bulan|months?)/i,
+      answer: "0% installment needs a minimum purchase of Rp1.500.000 with a BCA, Mandiri or BNI credit card, for 3, 6 or 12 months.",
+      pattern: /1[.,]?500[.,]?000|1[.,]5\s*juta/i,
     },
   },
 ] satisfies { id: string; input: string; expected: Expected }[];
@@ -63,7 +60,7 @@ const judge = getModel(process.env.EVAL_JUDGE_MODEL_ID);
 const correctnessParams = ["input", "actualOutput", "expectedOutput"] as const;
 
 await runEvalCli({
-  name: "hr-leave",
+  name: "support-warranty-vouchers",
   cases,
   concurrency: 5,
   exitCode: true,
@@ -88,7 +85,7 @@ await runEvalCli({
       evaluationParams: correctnessParams,
       expected: ({ case: testCase }) => testCase.expected?.answer ?? "",
       evaluationSteps: [
-        "List the key facts, numbers and conditions in the expected output for the user's HR question.",
+        "List the key facts, numbers and conditions in the expected output for the customer's question.",
         "Check each one is present and correct in the actual output. Different wording or number formatting (Rp1.000.000, 1,000,000, 1 juta) is fine.",
         "Penalise numbers or rules in the actual output that contradict the expected output.",
         "Do not penalise extra helpful details that do not contradict the expected output.",

@@ -1,17 +1,18 @@
-# Anvia Fullstack: HR Assistant
+# Anvia Fullstack: Customer Support Agent
 
-A ChatGPT-style HR assistant for **PT Maju Jaya Sakti** (a fictional Indonesian company), built with [Anvia](https://github.com/anvia-hq/anvia).
+A ChatGPT-style customer support assistant for **Toko Maju Elektronik**, a fictional Indonesian online store for home electronics, built with [Anvia](https://github.com/anvia-hq/anvia).
 
-Employees ask about leave (cuti), overtime (lembur), THR, BPJS, PPh 21, contracts and termination. The agent answers from built-in summaries of company policy and Indonesian employment rules, and searches the web for figures that change often, such as the minimum wage.
+Customers ask about orders, shipping, payment, returns and refunds, warranty and vouchers. The agent answers from the store's policy documents, and uses tools to look up orders, track shipments and submit return requests.
 
-> The company and its policies are mock data, and the Indonesian rule summaries are simplified. This is a demo, not legal advice.
+> The store, its policies and its orders are mock data. This is a demo.
 
 ## Features
 
 - Streaming chat UI with markdown answers (dark mode)
 - Multiple chat sessions: `/` starts a new chat, `/s/:id` continues one, and the sidebar lists past chats
 - Conversation memory stored in PostgreSQL (`@anvia/memory-prisma` on Prisma 8)
-- Web search and webpage reading tools (Tavily)
+- Order tools on mock data: look up an order, track a shipment, submit a return request (only after the customer confirms)
+- Web search and webpage reading tools (Tavily), for general product questions
 - Tracing and eval scores in Anvia Lens (optional)
 - 20 eval cases scored for correctness, relevancy and expected numbers
 
@@ -33,7 +34,7 @@ apps/
   api/            Hono API: chat streaming, sessions, memory store
   web/            React app: new-chat page, chat page, sidebar
 packages/
-  agents/         The HR agent: model, instructions, context, tools, evals, Lens
+  agents/         The support agent: model, instructions, context, tools, evals, Lens
   db/             Prisma 8 contract and database client
 infra/lens/       Self-hosted Anvia Lens (Docker Compose), optional
 docker-compose.dev.yaml   PostgreSQL 16 for development
@@ -43,7 +44,8 @@ Key files:
 
 - [packages/agents/src/agent.ts](packages/agents/src/agent.ts): `createAgent()` and `runAgent()`
 - [packages/agents/src/instructions.ts](packages/agents/src/instructions.ts): the system prompt
-- [packages/agents/src/context/](packages/agents/src/context/): company policies and Indonesian rule documents
+- [packages/agents/src/context/store.ts](packages/agents/src/context/store.ts): store profile and policy documents
+- [packages/agents/src/tools/orders/](packages/agents/src/tools/orders/): order tools and mock orders
 - [packages/agents/src/evals/](packages/agents/src/evals/): eval suites
 - [packages/db/src/prisma/contract.prisma](packages/db/src/prisma/contract.prisma): database models
 - [apps/api/src/index.ts](apps/api/src/index.ts): API routes
@@ -117,12 +119,12 @@ Run these from the project root.
 | `pnpm run db:emit` | Regenerate the contract files after editing `contract.prisma` |
 | `pnpm run db:init` | Create missing tables (additive only, never drops anything) |
 | `pnpm run evals` | Run all eval suites |
-| `pnpm run evals:1` … `evals:4` | Run one suite: leave, overtime and THR, BPJS and tax, contracts and termination |
+| `pnpm run evals:1` … `evals:4` | Run one suite: returns and refunds, shipping and payment, warranty and vouchers, orders (uses the order tools) |
 | `pnpm run lens:test` | Run one agent request and send its trace to Lens |
 
 ## How it works
 
-1. On `/`, the user types a question. The app creates a session id and opens `/s/:id`, which sends the question.
+1. On `/`, the customer types a question. The app creates a session id and opens `/s/:id`, which sends the question.
 2. The web app streams the request to `POST /api/chat` with an `x-session-id` header (`useChat` with `createHttpClientTransport`).
 3. The API calls `runAgent()` with a Prisma memory store, scoped to the session and the user (`default-user`; there is no login yet). The agent loads earlier messages from memory, answers, and saves each new message.
 4. The answer streams back to the browser through `agentToClientStream` and `createClientStreamResponse`.
@@ -147,13 +149,27 @@ This project uses the **Prisma 8 release candidate**, which works differently fr
 
 To change the database: edit `contract.prisma`, then run `pnpm run db:emit` and `pnpm run db:init`.
 
+## Mock orders
+
+The order tools read five mock orders from [data.ts](packages/agents/src/tools/orders/data.ts). Use them to try the chat, for example "Cek pesanan MJE-1002, email andi@example.com".
+
+| Order | Email | Status | Good for trying |
+|---|---|---|---|
+| MJE-1001 | sari@example.com | Delivered 3 days ago | A return within the 7-day period |
+| MJE-1002 | andi@example.com | Shipped | Tracking a shipment |
+| MJE-1003 | dewi@example.com | Delivered 10 days ago | A return after the period has passed |
+| MJE-1004 | rudi@example.com | Awaiting payment | Payment deadline |
+| MJE-1005 | maya@example.com | Being packed | Cancelling an order |
+
+Dates are relative to the current time, so the return periods behave the same whenever you run it. A wrong email gets the same "no order found" answer as a wrong order number.
+
 ## Evals
 
 There are 20 test questions with reference answers in [packages/agents/src/evals/](packages/agents/src/evals/), split into 4 suites. Each answer is scored on three metrics:
 
 - `correctness`: an LLM judge compares the answer with the reference, using a 0–10 rubric. It passes at 0.7.
 - `answerRelevancy`: whether the answer stays on the question. It passes at 0.7.
-- `containsNumber`: a regex check for the key number, for example `/275[.,]?000/`.
+- `containsNumber`: a regex check for the key number, for example `/17[.,]?495/` for the shipping insurance fee.
 
 Runs make real model calls. When Lens is configured, the scores are also published to Lens and linked to each run's trace. By default the agent judges its own answers; set `EVAL_JUDGE_MODEL_ID` to use another model as the judge.
 
@@ -161,10 +177,10 @@ Runs make real model calls. When Lens is configured, the scores are also publish
 
 [infra/lens/](infra/lens/) contains a Docker Compose setup for a self-hosted Anvia Lens. Configure it with `infra/lens/.env`, based on its `.env.example`, then start it from that folder with `docker compose up -d`. Create keys in Lens and put them in the root `.env` as `ANVIA_LENS_*`.
 
-Lens captures full prompts and answers (`captureMode: "full"` in [lens.ts](packages/agents/src/lens.ts)). Change it to `"safe"` if employee messages should not be stored there.
+Lens captures full prompts and answers (`captureMode: "full"` in [lens.ts](packages/agents/src/lens.ts)). Change it to `"safe"` if customer messages should not be stored there.
 
 ## Known limitations
 
 - No authentication: every session belongs to `default-user`.
-- Company data and the Indonesian rule summaries are mock data.
+- The store policies and orders are mock data. The order tools don't change anything: a return request only returns an ID.
 - Prisma 8 is a release candidate and may change before the stable release.

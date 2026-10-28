@@ -14,47 +14,43 @@ type Output = AgentResponse<string>;
 
 const cases = [
   {
-    id: "bpjs-kesehatan-employee-share",
-    input: "Gaji saya Rp10.000.000. Berapa potongan BPJS Kesehatan dari gaji saya per bulan?",
+    id: "free-shipping-jabodetabek",
+    input: "Saya belanja Rp350.000 dikirim ke Jakarta. Dapat gratis ongkir?",
     expected: {
-      answer:
-        "BPJS Kesehatan is 5% of wage: the employee pays 1% = Rp100.000 a month, and the employer pays 4% = Rp400.000.",
-      pattern: /100[.,]?000/,
+      answer: "Yes. Orders to Jabodetabek get free shipping from Rp300.000, so Rp350.000 qualifies.",
+      pattern: /300[.,]?000/,
     },
   },
   {
-    id: "bpjs-kesehatan-wage-cap",
-    input: "My salary is Rp15.000.000. How much is deducted for BPJS Kesehatan?",
+    id: "free-shipping-java",
+    input: "Minimal belanja berapa supaya gratis ongkir ke Bandung?",
     expected: {
-      answer:
-        "BPJS Kesehatan uses a wage cap of Rp12.000.000, so the employee pays 1% x 12.000.000 = Rp120.000 a month (the employer pays 4% = Rp480.000).",
-      pattern: /120[.,]?000/,
+      answer: "Bandung is in Java outside Jabodetabek, so free shipping starts at Rp500.000.",
+      pattern: /500[.,]?000/,
     },
   },
   {
-    id: "bpjs-jht",
-    input: "Gaji saya Rp8.000.000. Berapa iuran JHT yang dipotong dari saya dan yang dibayar perusahaan?",
+    id: "same-day-cutoff",
+    input: "Sampai jam berapa saya harus bayar supaya pesanan dikirim hari yang sama?",
     expected: {
-      answer:
-        "JHT is 5.7% of wage: the employee pays 2% = Rp160.000 and the employer pays 3.7% = Rp296.000 a month.",
-      pattern: /160[.,]?000/,
+      answer: "Orders paid before 15:00 WIB on a working day are handed to the courier the same day. With an instant courier, Jabodetabek orders paid before 15:00 WIB arrive the same day.",
+      pattern: /15[.:]00|3\s*(sore|pm)/i,
     },
   },
   {
-    id: "pph21-ptkp-married",
-    input: "Saya menikah dan punya 2 anak (K/2). Berapa PTKP saya per tahun?",
+    id: "shipping-insurance",
+    input: "Saya mau beli TV seharga Rp3.499.000. Ada biaya asuransi pengiriman? Berapa?",
     expected: {
-      answer: "PTKP K/2 = 54.000.000 + 4.500.000 (married) + 2 x 4.500.000 (dependants) = Rp67.500.000 a year.",
-      pattern: /67[.,]?500[.,]?000|67[.,]5\s*juta/i,
+      answer: "Yes. Insurance is required for orders of Rp1.000.000 or more, at 0.5% of the item value: 0.5% x 3.499.000 = Rp17.495.",
+      pattern: /17[.,]?495/,
     },
   },
   {
-    id: "pph21-progressive",
-    input: "If my annual taxable income (PKP) is Rp100.000.000, how much PPh 21 do I owe for the year?",
+    id: "cod-limit",
+    input: "Berapa maksimal belanja kalau bayar COD, dan ada biayanya?",
     expected: {
-      answer:
-        "Progressive rates: first Rp60.000.000 at 5% = Rp3.000.000, next Rp40.000.000 at 15% = Rp6.000.000. Total Rp9.000.000 for the year.",
-      pattern: /9[.,]?000[.,]?000|9\s*juta/i,
+      answer: "COD is available in Jabodetabek and the rest of Java for orders up to Rp2.000.000, with a COD fee of Rp5.000 per order.",
+      pattern: /2[.,]?000[.,]?000|2\s*juta/i,
     },
   },
 ] satisfies { id: string; input: string; expected: Expected }[];
@@ -64,7 +60,7 @@ const judge = getModel(process.env.EVAL_JUDGE_MODEL_ID);
 const correctnessParams = ["input", "actualOutput", "expectedOutput"] as const;
 
 await runEvalCli({
-  name: "hr-bpjs-tax",
+  name: "support-shipping-payment",
   cases,
   concurrency: 5,
   exitCode: true,
@@ -89,7 +85,7 @@ await runEvalCli({
       evaluationParams: correctnessParams,
       expected: ({ case: testCase }) => testCase.expected?.answer ?? "",
       evaluationSteps: [
-        "List the key facts, numbers and conditions in the expected output for the user's HR question.",
+        "List the key facts, numbers and conditions in the expected output for the customer's question.",
         "Check each one is present and correct in the actual output. Different wording or number formatting (Rp1.000.000, 1,000,000, 1 juta) is fine.",
         "Penalise numbers or rules in the actual output that contradict the expected output.",
         "Do not penalise extra helpful details that do not contradict the expected output.",

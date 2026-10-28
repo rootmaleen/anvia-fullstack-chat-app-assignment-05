@@ -18,10 +18,10 @@ function Index() {
 
   return (
     <div className="flex h-full flex-col">
-      <header className="px-4 py-3 text-lg font-semibold">HR Assistant</header>
+      <header className="px-4 py-3 text-lg font-semibold">Toko Maju Elektronik · Customer Support</header>
 
       <div className="flex flex-1 flex-col items-center justify-center gap-8 px-4 pb-[15vh]">
-        <h1 className="text-3xl font-semibold">Ada yang bisa saya bantu?</h1>
+        <h1 className="text-3xl font-semibold">Ada yang bisa kami bantu, Kak?</h1>
         <form
           onSubmit={(event) => {
             event.preventDefault();
@@ -41,7 +41,7 @@ function Index() {
               }
             }}
             className="max-h-48 flex-1 resize-none self-center bg-transparent py-1.5 outline-none placeholder:text-gray-400"
-            placeholder="Tanya soal cuti, lembur, THR, BPJS…"
+            placeholder="Tanya soal pesanan, pengiriman, retur, garansi…"
           />
           <button
             type="submit"
