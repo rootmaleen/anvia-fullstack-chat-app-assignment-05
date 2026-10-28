@@ -55,7 +55,7 @@ const cases = [
   },
 ] satisfies { id: string; input: string; expected: Expected }[];
 
-// Set EVAL_JUDGE_MODEL_ID to judge with a different OpenRouter model than the agent.
+// Set EVAL_JUDGE_MODEL_ID to judge with a different model than the agent.
 const judge = getModel(process.env.EVAL_JUDGE_MODEL_ID);
 const correctnessParams = ["input", "actualOutput", "expectedOutput"] as const;
 

@@ -3,4 +3,6 @@ dist
 .env
 .DS_Store
 *.local
-*.tsbuildinfo
+
+# Design files
+design-ui/

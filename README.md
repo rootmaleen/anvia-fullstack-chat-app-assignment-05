@@ -83,7 +83,7 @@ Key files:
 
    | Variable                                                                | Required            | Purpose                                                                                                           |
    | ----------------------------------------------------------------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------- |
-   | `OPENROUTER_API_KEY`                                                    | yes                 | Key for the model gateway. The gateway URL and default model are set in [model.ts](packages/agents/src/model.ts). |
+   | `OPENAI_API_KEY`                                                        | yes                 | Key for the model gateway. The gateway URL and default model are set in [model.ts](packages/agents/src/model.ts). |
    | `TAVILY_API_KEY`                                                        | yes, for web search | Used by the `search_web` and `read_webpage` tools                                                                 |
    | `DATABASE_URL`                                                          | yes                 | The default matches `docker-compose.dev.yaml`                                                                     |
    | `ANVIA_LENS_BASE_URL`, `ANVIA_LENS_PUBLIC_KEY`, `ANVIA_LENS_SECRET_KEY` | no                  | Turns on Lens tracing. Leave empty to turn it off.                                                                |
