@@ -4,6 +4,16 @@ import { initialMessagesFromMemory, useChat } from "@anvia/react";
 import { ChatProvider, ComposerPrimitive, MessagePrimitive, ThreadPrimitive } from "@anvia/react-ui";
 import { createFileRoute, useLocation, useRouter } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef } from "react";
+import {
+  composerClassName,
+  composerInputClassName,
+  composerPlaceholder,
+  Disclaimer,
+  SendIcon,
+  sendButtonClassName,
+  StopIcon,
+} from "../../components/composer";
+import { LogoMark } from "../../components/logo";
 
 export const Route = createFileRoute("/s/$id")({
   loader: async ({ params }) => {
@@ -80,65 +90,87 @@ function Session() {
 
   return (
     <ChatProvider controller={chat}>
-      <ThreadPrimitive.Root className="flex h-full flex-col">
-        <header className="px-4 py-3 text-lg font-semibold">Toko Maju Elektronik · Customer Support</header>
-
+      <ThreadPrimitive.Root className="flex min-h-0 flex-1 flex-col">
         <ThreadPrimitive.Viewport className="flex-1 overflow-y-auto">
-          <div className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-6">
-            <ThreadPrimitive.Messages>
-              <MessagePrimitive.Root className="group flex flex-col items-start gap-1 data-[role=user]:items-end">
+          <div className="mx-auto flex max-w-3xl flex-col gap-5 px-4 py-5 md:gap-7 md:py-10">
+            <ThreadPrimitive.Messages className="flex flex-col gap-5 md:gap-7">
+              <MessagePrimitive.Root className="flex flex-col gap-5 empty:hidden md:gap-7">
                 {(message) => (
                   <>
                     {startsNewDay(message) && (
-                      <p className="self-stretch py-2 text-center text-xs font-medium text-gray-400">
-                        {formatDate(messageTime(message))}
-                      </p>
+                      <div className="flex items-center gap-4">
+                        <span className="h-px flex-1 bg-line" />
+                        <p className="text-xs font-medium text-ink-muted">{formatDate(messageTime(message))}</p>
+                        <span className="h-px flex-1 bg-line" />
+                      </div>
                     )}
-                    <MessagePrimitive.Content className="max-w-full group-data-[role=user]:max-w-[70%] group-data-[role=user]:rounded-3xl group-data-[role=user]:bg-[#303030] group-data-[role=user]:px-5 group-data-[role=user]:py-2.5">
-                      <MessagePrimitive.Parts filter={(part) => part.type === "text"}>
-                        {() => <MessagePrimitive.Markdown className="markdown" />}
-                      </MessagePrimitive.Parts>
-                    </MessagePrimitive.Content>
-                    {hasText(message) && (
-                      <time className="px-1 text-xs text-gray-500">{formatTime(messageTime(message))}</time>
+                    {message.role === "user" ? (
+                      <div className="flex flex-col items-end gap-1.5">
+                        <MessagePrimitive.Content className="max-w-[70%] rounded-[20px] rounded-br-md bg-brand px-4 py-3 text-[15px] leading-normal text-white">
+                          <MessagePrimitive.Parts filter={(part) => part.type === "text"}>
+                            {() => <MessagePrimitive.Markdown className="markdown" />}
+                          </MessagePrimitive.Parts>
+                        </MessagePrimitive.Content>
+                        {hasText(message) && <Timestamp message={message} />}
+                      </div>
+                    ) : (
+                      hasText(message) && (
+                        <div className="flex gap-2.5 md:gap-3">
+                          <div className="pt-0.5">
+                            <LogoMark size={24} />
+                          </div>
+                          <div className="flex min-w-0 flex-1 flex-col gap-2">
+                            <MessagePrimitive.Content className="text-[15px]">
+                              <MessagePrimitive.Parts filter={(part) => part.type === "text"}>
+                                {() => <MessagePrimitive.Markdown className="markdown" />}
+                              </MessagePrimitive.Parts>
+                            </MessagePrimitive.Content>
+                            <Timestamp message={message} />
+                          </div>
+                        </div>
+                      )
                     )}
                   </>
                 )}
               </MessagePrimitive.Root>
             </ThreadPrimitive.Messages>
 
-            {isRunning && <p className="animate-pulse text-sm text-gray-400">Thinking…</p>}
-            <ThreadPrimitive.Error className="rounded-lg bg-red-950 p-3 text-sm text-red-300" />
+            <ThreadPrimitive.Loading className="flex items-center gap-3">
+              <LogoMark size={24} />
+              <p className="thinking text-sm font-medium">Thinking…</p>
+            </ThreadPrimitive.Loading>
+            <ThreadPrimitive.Error className="flex items-center gap-3 rounded-xl border border-danger-line bg-danger-bg px-4 py-3 text-sm leading-[1.45] text-danger">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="shrink-0" aria-hidden="true">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 8v4M12 16h.01" />
+              </svg>
+              Maaf Kak, pesan belum bisa diproses. Silakan coba lagi beberapa saat lagi.
+            </ThreadPrimitive.Error>
           </div>
         </ThreadPrimitive.Viewport>
 
-        <div className="mx-auto w-full max-w-3xl px-4 pb-4">
-          <ComposerPrimitive.Root className="flex items-end gap-2 rounded-3xl bg-[#303030] p-2 pl-5">
-            <ComposerPrimitive.Input
-              className="max-h-48 flex-1 resize-none self-center bg-transparent py-1.5 outline-none placeholder:text-gray-400"
-              placeholder="Tanya soal pesanan, pengiriman, retur, garansi…"
-            />
-            {isRunning ? (
-              <ComposerPrimitive.Stop
-                aria-label="Stop"
-                className="flex size-9 items-center justify-center rounded-full bg-white text-black"
-              >
-                <span className="size-3 rounded-sm bg-black" />
-              </ComposerPrimitive.Stop>
-            ) : (
-              <ComposerPrimitive.Submit
-                aria-label="Send"
-                className="flex size-9 items-center justify-center rounded-full bg-white text-black disabled:bg-gray-500"
-              >
-                ↑
-              </ComposerPrimitive.Submit>
-            )}
+        <div className="mx-auto flex w-full max-w-3xl flex-col gap-2.5 px-4 pt-2 pb-3 md:gap-3 md:pb-5">
+          <ComposerPrimitive.Root className={composerClassName}>
+            <ComposerPrimitive.Input className={composerInputClassName} placeholder={composerPlaceholder} />
+            <div className="flex justify-end">
+              {isRunning ? (
+                <ComposerPrimitive.Stop aria-label="Stop" className={sendButtonClassName}>
+                  <StopIcon />
+                </ComposerPrimitive.Stop>
+              ) : (
+                <ComposerPrimitive.Submit aria-label="Send" className={sendButtonClassName}>
+                  <SendIcon />
+                </ComposerPrimitive.Submit>
+              )}
+            </div>
           </ComposerPrimitive.Root>
-          <p className="mt-2 text-center text-xs text-gray-400">
-            Asisten AI bisa keliru. Untuk hal penting, hubungi CS kami di WhatsApp +62 812-0000-1234.
-          </p>
+          <Disclaimer />
         </div>
       </ThreadPrimitive.Root>
     </ChatProvider>
   );
+}
+
+function Timestamp({ message }: { message: UIMessage }) {
+  return <time className="text-xs text-ink-muted">{formatTime(messageTime(message))}</time>;
 }

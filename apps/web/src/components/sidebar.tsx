@@ -1,39 +1,71 @@
 import { Link } from "@tanstack/react-router";
+import { LogoMark } from "./logo";
 
 export type SessionSummary = { id: string; title: string; updatedAt: string };
 
-export function Sidebar({ sessions }: { sessions: SessionSummary[] }) {
+// Fixed column on desktop. On mobile it is a drawer that slides in over a scrim.
+export function Sidebar({
+  sessions,
+  open,
+  onClose,
+}: {
+  sessions: SessionSummary[];
+  open: boolean;
+  onClose: () => void;
+}) {
   return (
-    <aside className="hidden w-64 shrink-0 flex-col bg-[#171717] p-3 md:flex">
-      <Link to="/" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium hover:bg-white/10">
-        <span className="text-lg leading-none">+</span> New chat
-      </Link>
+    <>
+      {open && <div className="fixed inset-0 z-30 bg-ink/40 md:hidden" onClick={onClose} />}
 
-      <p className="mt-6 px-3 text-xs font-medium text-gray-400">Chats</p>
-      <nav className="mt-1 flex flex-1 flex-col gap-0.5 overflow-y-auto">
-        {sessions.length === 0 && <p className="px-3 py-2 text-sm text-gray-500">No chats yet</p>}
-        {sessions.map((session) => (
-          <Link
-            key={session.id}
-            to="/s/$id"
-            params={{ id: session.id }}
-            className="truncate rounded-lg px-3 py-2 text-sm hover:bg-white/10"
-            activeProps={{ className: "bg-white/10" }}
-          >
-            {session.title}
-          </Link>
-        ))}
-      </nav>
+      <aside
+        className={`fixed inset-y-0 left-0 z-40 flex w-[310px] shrink-0 flex-col gap-4 border-r border-line bg-sidebar p-4 transition-transform md:static md:w-[260px] md:translate-x-0 ${
+          open ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="pl-1">
+          <LogoMark />
+        </div>
 
-      <div className="flex items-center gap-3 rounded-lg px-3 py-2">
-        <div className="flex size-8 items-center justify-center rounded-full bg-emerald-600 text-xs font-semibold text-white">
-          DU
+        <Link
+          to="/"
+          onClick={onClose}
+          className="flex h-10 items-center justify-center gap-2 rounded-xl border border-line bg-white px-3.5 text-sm font-semibold text-ink hover:bg-hover"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+          New chat
+        </Link>
+
+        <nav className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto">
+          <p className="px-3 pt-1 pb-1.5 text-xs font-semibold text-ink-muted">Chats</p>
+          {sessions.length === 0 && <p className="px-3 py-2 text-sm text-ink-muted">No chats yet</p>}
+          {sessions.map((session) => (
+            <Link
+              key={session.id}
+              to="/s/$id"
+              params={{ id: session.id }}
+              onClick={onClose}
+              className="flex h-10 shrink-0 items-center truncate rounded-[10px] px-3 text-sm font-medium text-ink hover:bg-hover md:h-9"
+              activeProps={{ className: "bg-brand-tint font-semibold text-brand hover:bg-brand-tint" }}
+            >
+              <span className="truncate">{session.title}</span>
+            </Link>
+          ))}
+        </nav>
+
+        <div className="border-t border-line pt-3">
+          <div className="flex items-center gap-3 px-3 py-2">
+            <div className="flex size-9 items-center justify-center rounded-full bg-brand text-[13px] font-bold text-white">
+              DU
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-ink">default-user</p>
+              <p className="text-xs text-ink-muted">Toko Maju Elektronik</p>
+            </div>
+          </div>
         </div>
-        <div className="text-sm">
-          <p className="font-medium">default-user</p>
-          <p className="text-xs text-gray-400">Toko Maju Elektronik</p>
-        </div>
-      </div>
-    </aside>
+      </aside>
+    </>
   );
 }
