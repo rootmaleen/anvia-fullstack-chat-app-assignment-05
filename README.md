@@ -1,3 +1,10 @@
+# Assignment 05
+
+- Nama : Alin M
+- Program : AI Product Engineering with Typescript
+- Batch : 2
+- Assignment Number : 5
+
 # Anvia Fullstack: Customer Support Agent
 
 A ChatGPT-style customer support assistant for **Toko Maju Elektronik**, a fictional Indonesian online store for home electronics, built with [Anvia](https://github.com/anvia-hq/anvia).
@@ -8,8 +15,10 @@ Customers ask about orders, shipping, payment, returns and refunds, warranty and
 
 ## Features
 
-- Streaming chat UI with markdown answers (dark mode)
+- Streaming chat UI with markdown answers, in a light theme
 - Multiple chat sessions: `/` starts a new chat, `/s/:id` continues one, and the sidebar lists past chats
+- New-chat page with four suggestion cards that send a starter question
+- Mobile layout: the sidebar becomes a slide-in drawer
 - Conversation memory stored in PostgreSQL (`@anvia/memory-prisma` on Prisma 8)
 - Order tools on mock data: look up an order, track a shipment, submit a return request (only after the customer confirms)
 - Web search and webpage reading tools (Tavily), for general product questions
@@ -18,21 +27,21 @@ Customers ask about orders, shipping, payment, returns and refunds, warranty and
 
 ## Tech stack
 
-| Part | Tech |
-|---|---|
-| Monorepo | pnpm workspaces |
-| API | Hono, `@anvia/server`, `@anvia/client` |
-| Web | React 19, Vite, Tailwind CSS 4, TanStack Router (file-based), `@anvia/react`, `@anvia/react-ui` |
-| Agent | `@anvia/core`, `@anvia/openai` (OpenAI-compatible gateway), Tavily |
-| Database | PostgreSQL 16 (Docker), Prisma 8 (release candidate) |
-| Observability | `@anvia/lens` |
+| Part          | Tech                                                                                            |
+| ------------- | ----------------------------------------------------------------------------------------------- |
+| Monorepo      | pnpm workspaces                                                                                 |
+| API           | Hono, `@anvia/server`, `@anvia/client`                                                          |
+| Web           | React 19, Vite, Tailwind CSS 4, TanStack Router (file-based), `@anvia/react`, `@anvia/react-ui` |
+| Agent         | `@anvia/core`, `@anvia/openai` (OpenAI-compatible gateway), Tavily                              |
+| Database      | PostgreSQL 16 (Docker), Prisma 8 (release candidate)                                            |
+| Observability | `@anvia/lens`                                                                                   |
 
 ## Project structure
 
 ```
 apps/
   api/            Hono API: chat streaming, sessions, memory store
-  web/            React app: new-chat page, chat page, sidebar
+  web/            React app: new-chat page, chat page, header, sidebar, logo
 packages/
   agents/         The support agent: model, instructions, context, tools, evals, Lens
   db/             Prisma 8 contract and database client
@@ -72,12 +81,12 @@ Key files:
    cp .env.example .env
    ```
 
-   | Variable | Required | Purpose |
-   |---|---|---|
-   | `OPENROUTER_API_KEY` | yes | Key for the model gateway. The gateway URL and default model are set in [model.ts](packages/agents/src/model.ts). |
-   | `TAVILY_API_KEY` | yes, for web search | Used by the `search_web` and `read_webpage` tools |
-   | `DATABASE_URL` | yes | The default matches `docker-compose.dev.yaml` |
-   | `ANVIA_LENS_BASE_URL`, `ANVIA_LENS_PUBLIC_KEY`, `ANVIA_LENS_SECRET_KEY` | no | Turns on Lens tracing. Leave empty to turn it off. |
+   | Variable                                                                | Required            | Purpose                                                                                                           |
+   | ----------------------------------------------------------------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------- |
+   | `OPENROUTER_API_KEY`                                                    | yes                 | Key for the model gateway. The gateway URL and default model are set in [model.ts](packages/agents/src/model.ts). |
+   | `TAVILY_API_KEY`                                                        | yes, for web search | Used by the `search_web` and `read_webpage` tools                                                                 |
+   | `DATABASE_URL`                                                          | yes                 | The default matches `docker-compose.dev.yaml`                                                                     |
+   | `ANVIA_LENS_BASE_URL`, `ANVIA_LENS_PUBLIC_KEY`, `ANVIA_LENS_SECRET_KEY` | no                  | Turns on Lens tracing. Leave empty to turn it off.                                                                |
 
    All apps and scripts read this one root `.env` with Node's built-in `--env-file` flag.
 
@@ -110,21 +119,21 @@ Stop the database with `pnpm run db:down`. Data is kept in a Docker volume.
 
 Run these from the project root.
 
-| Command | What it does |
-|---|---|
-| `pnpm dev` | Start the API and the web app |
-| `pnpm run dev:api` / `dev:web` | Start one app |
-| `pnpm run build` | Type-check the API and build the web app |
-| `pnpm run db:up` / `db:down` | Start or stop PostgreSQL |
-| `pnpm run db:emit` | Regenerate the contract files after editing `contract.prisma` |
-| `pnpm run db:init` | Create missing tables (additive only, never drops anything) |
-| `pnpm run evals` | Run all eval suites |
+| Command                        | What it does                                                                                                   |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------- |
+| `pnpm dev`                     | Start the API and the web app                                                                                  |
+| `pnpm run dev:api` / `dev:web` | Start one app                                                                                                  |
+| `pnpm run build`               | Type-check the API and build the web app                                                                       |
+| `pnpm run db:up` / `db:down`   | Start or stop PostgreSQL                                                                                       |
+| `pnpm run db:emit`             | Regenerate the contract files after editing `contract.prisma`                                                  |
+| `pnpm run db:init`             | Create missing tables (additive only, never drops anything)                                                    |
+| `pnpm run evals`               | Run all eval suites                                                                                            |
 | `pnpm run evals:1` … `evals:4` | Run one suite: returns and refunds, shipping and payment, warranty and vouchers, orders (uses the order tools) |
-| `pnpm run lens:test` | Run one agent request and send its trace to Lens |
+| `pnpm run lens:test`           | Run one agent request and send its trace to Lens                                                               |
 
 ## How it works
 
-1. On `/`, the customer types a question. The app creates a session id and opens `/s/:id`, which sends the question.
+1. On `/`, the customer types a question or clicks a suggestion card. The app creates a session id and opens `/s/:id`, which sends the question.
 2. The web app streams the request to `POST /api/chat` with an `x-session-id` header (`useChat` with `createHttpClientTransport`).
 3. The API calls `runAgent()` with a Prisma memory store, scoped to the session and the user (`default-user`; there is no login yet). The agent loads earlier messages from memory, answers, and saves each new message.
 4. The answer streams back to the browser through `agentToClientStream` and `createClientStreamResponse`.
@@ -132,11 +141,11 @@ Run these from the project root.
 
 API routes:
 
-| Route | Purpose |
-|---|---|
-| `POST /api/chat` | Stream an agent answer. Needs the `x-session-id` header. |
-| `GET /api/chat/:sessionId` | Saved messages of one session |
-| `GET /api/sessions` | Sessions of `default-user`, newest first, titled by their first message |
+| Route                      | Purpose                                                                 |
+| -------------------------- | ----------------------------------------------------------------------- |
+| `POST /api/chat`           | Stream an agent answer. Needs the `x-session-id` header.                |
+| `GET /api/chat/:sessionId` | Saved messages of one session                                           |
+| `GET /api/sessions`        | Sessions of `default-user`, newest first, titled by their first message |
 
 ## Database (Prisma 8)
 
@@ -153,13 +162,13 @@ To change the database: edit `contract.prisma`, then run `pnpm run db:emit` and 
 
 The order tools read five mock orders from [data.ts](packages/agents/src/tools/orders/data.ts). Use them to try the chat, for example "Cek pesanan MJE-1002, email andi@example.com".
 
-| Order | Email | Status | Good for trying |
-|---|---|---|---|
-| MJE-1001 | sari@example.com | Delivered 3 days ago | A return within the 7-day period |
-| MJE-1002 | andi@example.com | Shipped | Tracking a shipment |
+| Order    | Email            | Status                | Good for trying                      |
+| -------- | ---------------- | --------------------- | ------------------------------------ |
+| MJE-1001 | sari@example.com | Delivered 3 days ago  | A return within the 7-day period     |
+| MJE-1002 | andi@example.com | Shipped               | Tracking a shipment                  |
 | MJE-1003 | dewi@example.com | Delivered 10 days ago | A return after the period has passed |
-| MJE-1004 | rudi@example.com | Awaiting payment | Payment deadline |
-| MJE-1005 | maya@example.com | Being packed | Cancelling an order |
+| MJE-1004 | rudi@example.com | Awaiting payment      | Payment deadline                     |
+| MJE-1005 | maya@example.com | Being packed          | Cancelling an order                  |
 
 Dates are relative to the current time, so the return periods behave the same whenever you run it. A wrong email gets the same "no order found" answer as a wrong order number.
 
