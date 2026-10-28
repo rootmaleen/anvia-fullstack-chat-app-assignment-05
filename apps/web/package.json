@@ -1,0 +1,29 @@
+{
+  "name": "@anvia/web",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@anvia/client": "^1.6.0",
+    "@anvia/core": "^1.17.2",
+    "@anvia/react": "^1.1.5",
+    "@anvia/react-ui": "^1.2.0",
+    "@tanstack/react-router": "^1.170.46",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@tanstack/router-plugin": "^1.168.48",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "tailwindcss": "^4.3.3",
+    "vite": "^8.3.5"
+  }
+}

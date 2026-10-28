@@ -1,0 +1,24 @@
+{
+  "name": "anvia-fullstack",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm -r --parallel dev",
+    "build": "pnpm -r build",
+    "dev:api": "pnpm --filter @anvia/api dev",
+    "dev:web": "pnpm --filter @anvia/web dev",
+    "evals": "pnpm --filter @anvia/agents evals",
+    "evals:1": "pnpm --filter @anvia/agents evals:1",
+    "evals:2": "pnpm --filter @anvia/agents evals:2",
+    "evals:3": "pnpm --filter @anvia/agents evals:3",
+    "evals:4": "pnpm --filter @anvia/agents evals:4",
+    "lens:test": "pnpm --filter @anvia/agents lens:test",
+    "db:up": "docker compose -f docker-compose.dev.yaml up -d",
+    "db:down": "docker compose -f docker-compose.dev.yaml down",
+    "db:emit": "pnpm --filter @anvia/db emit",
+    "db:init": "pnpm --filter @anvia/db db:init"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "typescript": "^7.0.2"
+  }
+}
